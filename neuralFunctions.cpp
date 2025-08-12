@@ -12,8 +12,14 @@ Network::Network(std::vector<int>& lS){
         biases.push_back(iThLayerBiases);
     }
     for(size_t i = 1; i < numLayers-1; i++){
-        std::uniform_int_distribution<> distr(lS[i+1], lS[i]);
-        
+        //use eigen random matrix function instead?
+        std::uniform_real_distribution<> distr(lS[i+1], lS[i]);
+        Eigen::MatrixXd iThConnection(lS[i+1], lS[i]);
+        for(size_t j = 0; j < lS[i+1]; j++){
+            for(size_t k = 0; k < lS[i]; k++){
+                iThConnection(j,k) = distr(gen);
+            }
+        }
     }
 }
 
