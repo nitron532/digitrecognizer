@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <random>
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -13,4 +12,5 @@ class Network{
         std::vector<Eigen::MatrixXd> weights;
     public:
         Network(std::vector<int>& lS);
+        auto feedForward(Eigen::VectorXd& previousLayerOutput);
 };

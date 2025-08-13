@@ -1,27 +1,24 @@
 #include "neuralFunctions.h"
-
+//consider passing things by reference for efficiency ( sigmoid functions)
 Network::Network(std::vector<int>& lS){
-    std::random_device rd;
-    std::mt19937 gen(rd());
     numLayers = layerSizes.size();
     for(size_t i = 1; i < numLayers; i++){
-        Eigen::VectorXd iThLayerBiases(lS[i]);
-        for(size_t j = 0; j < lS[i]; j++){
-            iThLayerBiases(lS[i]) = rand() % lS[i]+1;
-        }
-        biases.push_back(iThLayerBiases);
+        biases.push_back(Eigen::VectorXd(lS[i]).Zero());
     }
     for(size_t i = 1; i < numLayers-1; i++){
-        //use eigen random matrix function instead?
-        std::uniform_real_distribution<> distr(lS[i+1], lS[i]);
-        Eigen::MatrixXd iThConnection(lS[i+1], lS[i]);
-        for(size_t j = 0; j < lS[i+1]; j++){
-            for(size_t k = 0; k < lS[i]; k++){
-                iThConnection(j,k) = distr(gen);
-            }
-        }
+        //uniform xavier initialization of weights tensor
+        weights.push_back(Eigen::MatrixXd::Random(lS[i+1], lS[i]) * sqrt(6.0/(lS[i]+lS[i+1])));
     }
 }
+
+auto Network::feedForward(Eigen::VectorXd& prevLayerOutputs){
+    for(size_t i = 0; i < biases.size(); i++){
+        prevLayerOutputs = (weights[i] * prevLayerOutputs + biases[i]).unaryExpr(&sigmoid);
+    }
+    return prevLayerOutputs;
+}
+
+
 
 auto sigmoid(Eigen::MatrixXd z){ //might wanna change the auto to the actual type?
     return 1.0/(1.0 + (-z).exp());
