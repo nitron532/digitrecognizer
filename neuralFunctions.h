@@ -14,9 +14,11 @@ class Network{
         std::vector<int> layerSizes;
         std::vector<Eigen::VectorXd> biases;
         std::vector<Eigen::MatrixXd> weights;
-        void updateMiniBatch(std::vector<std::pair<double,int>> batch, double lR);
+        void updateMiniBatch(const std::vector<std::pair<Eigen::VectorXd,Eigen::VectorXd>> batch, double lR);
+        std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::VectorXd>> backpropagation(Eigen::VectorXd x, Eigen::VectorXd y);
+        Eigen::VectorXd costDerivative(Eigen::VectorXd outputActivations, Eigen::VectorXd y);
     public:
         Network(std::vector<int>& lS);
-        auto feedForward(Eigen::VectorXd& previousLayerOutput);
-        void stochasticGradientDescent(std::vector<std::pair<double,int>> trainingData, size_t epochs, size_t miniBatchSize, double learningRate,std::vector<std::pair<double,int>> testData);
+        auto feedForward(Eigen::VectorXd previousLayerOutput);
+        void stochasticGradientDescent(std::vector<std::pair<Eigen::VectorXd,Eigen::VectorXd>> trainingData, size_t epochs, size_t miniBatchSize, double learningRate,std::vector<std::pair<Eigen::VectorXd,Eigen::VectorXd>> testData);
 };
