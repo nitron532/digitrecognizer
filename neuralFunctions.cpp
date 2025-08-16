@@ -1,10 +1,10 @@
 #include "neuralFunctions.h"
 //consider passing things by reference for efficiency ( sigmoid functions)
-auto sigmoid(Eigen::MatrixXd z){ //might wanna change the auto to the actual type?
+Eigen::MatrixXd sigmoid(Eigen::MatrixXd z){ //might wanna change the auto to the actual type?
     return 1.0/(1.0 + (-z).array().exp());
 } 
-auto sigmoidPrime(Eigen::MatrixXd z){
-    return sigmoid(z)*(1-sigmoid(z));
+Eigen::MatrixXd sigmoidPrime(Eigen::MatrixXd z){
+    return (sigmoid(z).array()*(1-sigmoid(z).array())).matrix();
 }
 
 Eigen::VectorXd Network::costDerivative(Eigen::VectorXd outputActivations, Eigen::VectorXd y){
@@ -22,7 +22,7 @@ Network::Network(std::vector<int>& lS){
     }
 }
 
-auto Network::feedForward(Eigen::VectorXd prevLayerOutputs){
+Eigen::VectorXd Network::feedForward(Eigen::VectorXd prevLayerOutputs){
     for(size_t i = 0; i < biases.size(); i++){
         Eigen::VectorXd z = weights[i] * prevLayerOutputs + biases[i];
         prevLayerOutputs = sigmoid(z);
@@ -30,7 +30,7 @@ auto Network::feedForward(Eigen::VectorXd prevLayerOutputs){
     return prevLayerOutputs;
 }
 
-std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::VectorXd>> Network::backpropagation(Eigen::VectorXd x, Eigen::VectorXd y){ 
+std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::MatrixXd>> Network::backpropagation(Eigen::VectorXd x, Eigen::VectorXd y){ 
     std::vector<Eigen::MatrixXd> nablaWeight;
     std::vector<Eigen::VectorXd> nablaBias;
     for (const auto& b : biases) {
@@ -39,18 +39,29 @@ std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::VectorXd>> Network::ba
     for (const auto& w : weights) {
         nablaWeight.push_back(Eigen::MatrixXd::Zero(w.rows(),w.cols()));
     }
-    Eigen::VectorXd activation = x;
+    Eigen::VectorXd activation = x; //backprop alg step 1 input
     std::vector<Eigen::VectorXd> activations = {x};
     std::vector<Eigen::VectorXd> weightedInputLayers;
-    for (size_t i = 0; i < biases.size(); i++){
+    for (size_t i = 0; i < biases.size(); i++){ //backprop alg step 2 feedforward
         Eigen::VectorXd z = weights[i] * activation + biases[i];
         weightedInputLayers.push_back(z);
         activation = sigmoid(z);
         activations.push_back(activation);
     }
-    
-    std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::VectorXd>> test = {};
-    return test;
+    //backprop alg step 3 compute delta error
+    Eigen::VectorXd deltaError = (costDerivative(activations[activations.size()-1], y).array() * sigmoidPrime(weightedInputLayers[weightedInputLayers.size()-1]).array()).matrix();
+    nablaBias[nablaBias.size()-1] = deltaError;
+    nablaWeight[nablaWeight.size()-1] = deltaError * activations[activations.size()-2].transpose();
+    //backprop alg step 4 backprop the error
+    for(size_t i = activations.size()-2; i >= 0; i--){
+        Eigen::VectorXd z = weightedInputLayers[i];
+        Eigen::VectorXd sigPrime = sigmoidPrime(z);
+        deltaError = (weights[i+1].transpose() * deltaError) * sigPrime;
+        //backprop step 5 output
+        nablaBias[i] = deltaError;
+        nablaWeight[i] = deltaError * activations[i-1].transpose(); 
+    }
+    return {nablaBias,nablaWeight};
 }
 
 
@@ -64,7 +75,7 @@ void Network::updateMiniBatch(const std::vector<std::pair<Eigen::VectorXd,Eigen:
         nablaWeight.push_back(Eigen::MatrixXd::Zero(w.rows(),w.cols()));
     }
     for(size_t i = 0; i < batch.size(); i++){
-        std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::VectorXd>> deltaNabla = backpropagation(batch[i].first, batch[i].second);
+        std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::MatrixXd>> deltaNabla = backpropagation(batch[i].first, batch[i].second);
         for(size_t j = 0; j < nablaBias.size(); j++){
             nablaBias[j] += deltaNabla.first[j];
             nablaWeight[j] += deltaNabla.second[j];
