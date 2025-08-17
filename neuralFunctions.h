@@ -17,6 +17,7 @@ class Network{
         void updateMiniBatch(const std::vector<std::pair<Eigen::VectorXd,Eigen::VectorXd>> batch, double lR);
         std::pair<std::vector<Eigen::VectorXd>,std::vector<Eigen::MatrixXd>> backpropagation(Eigen::VectorXd x, Eigen::VectorXd y);
         Eigen::VectorXd costDerivative(Eigen::VectorXd outputActivations, Eigen::VectorXd y);
+        double evaluate(std::vector<std::pair<Eigen::VectorXd, Eigen::VectorXd>> trainingData);
     public:
         Network(std::vector<int>& lS);
         Eigen::VectorXd feedForward(Eigen::VectorXd previousLayerOutput);

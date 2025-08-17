@@ -103,11 +103,31 @@ void Network::stochasticGradientDescent(std::vector<std::pair<Eigen::VectorXd,Ei
         for(const auto& miniBatch : miniBatches){
             updateMiniBatch(miniBatch,learningRate);
         }
-        // if(testData.size() != 0){
-        //     std::cout<< "Epoch: " << i+1 << evaluate(test)
-        // }
+        if(testData.size() != 0){
+            std::cout<< "Epoch: " << i+1 <<": " << evaluate(trainingData) << std::endl;
+        }
+        else{
+            std::cout <<"Epoch 0 complete" << std::endl;
+        }
     }
 }
 
-
-
+double Network::evaluate(std::vector<std::pair<Eigen::VectorXd, Eigen::VectorXd>> trainingData){
+    std::vector<std::pair<Eigen::VectorXd, Eigen::VectorXd>> results;
+    double correctCount = 0;
+    for(size_t i = 0; i < trainingData.size(); i++){
+        results.push_back({feedForward(trainingData[i].first),trainingData[i].second});
+        int maxIndexResult = 0;
+        int maxIndexExpected = 0;
+        for (size_t j = 1; j < results[i].first.size(); j++){
+            if (results[i].first[j] > results[i].first[maxIndexResult]){
+                maxIndexResult = j;
+            }
+            if(results[i].second[j] > results[i].second[maxIndexExpected]){
+                maxIndexExpected = j;
+            }
+        }
+        if(maxIndexResult == maxIndexExpected){correctCount++;}
+    }
+    return correctCount / trainingData.size();
+}
