@@ -133,7 +133,8 @@ int main(){
     Network brain = Network(layerVector);
     std::cout<< "Constructed neural network! " << std::endl;
     std::cout << "Beginning stochastic gradient descent..." << std::endl;
+    std::cout << trainingData.size() << " " << trainingData[0].first.size() << std::endl;
     brain.stochasticGradientDescent(trainingData, 30, 32, 1,testingData);
     // brain.stochasticGradientDescent(trainingData, (size_t)epochs, (size_t)miniBatchSize, learningRate,testingData);
-    return 0;//
+    return 0;
 }

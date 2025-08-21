@@ -1,4 +1,6 @@
 
 main
-.vscode/
-.data/
+old/
+results.txt
+weights.txt
+data/
