@@ -129,12 +129,16 @@ int main(){
     }
     std::cout<< "Construting neural network... " << std::endl;
     */
-   std::vector<size_t> layerVector = {784,100,100,10};
-    Network brain = Network(layerVector);
-    std::cout<< "Constructed neural network! " << std::endl;
-    std::cout << "Beginning stochastic gradient descent..." << std::endl;
-    std::cout << trainingData.size() << " " << trainingData[0].first.size() << std::endl;
-    brain.stochasticGradientDescent(trainingData, 30, 32, 1,testingData);
+//    std::vector<size_t> layerVector = {784,100,100,10};
+//     Network brain = Network(layerVector);
+//     std::cout<< "Constructed neural network! " << std::endl;
+//     std::cout << "Beginning stochastic gradient descent..." << std::endl;
+//     std::cout << trainingData.size() << " " << trainingData[0].first.size() << std::endl;
+//     brain.stochasticGradientDescent(trainingData, 30, 32, 1,testingData);
     // brain.stochasticGradientDescent(trainingData, (size_t)epochs, (size_t)miniBatchSize, learningRate,testingData);
+    std::vector<size_t> layerVector = {784, 28,28, 10};
+    Network brain = Network(layerVector);
+    brain.sgdTrain(trainingData,32,30,0.1);
+    //sgdTrain(const stdVecStdPairEigVec& trainingData, size_t miniBatches, size_t epochs, double learningRate);
     return 0;
 }
