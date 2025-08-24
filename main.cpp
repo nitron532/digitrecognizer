@@ -136,9 +136,9 @@ int main(){
 //     std::cout << trainingData.size() << " " << trainingData[0].first.size() << std::endl;
 //     brain.stochasticGradientDescent(trainingData, 30, 32, 1,testingData);
     // brain.stochasticGradientDescent(trainingData, (size_t)epochs, (size_t)miniBatchSize, learningRate,testingData);
-    std::vector<size_t> layerVector = {784, 28,28, 10};
+    std::vector<size_t> layerVector = {784,256, 10};
     Network brain = Network(layerVector);
-    brain.sgdTrain(trainingData,32,30,0.1);
+    brain.sgdTrain(trainingData,32,30,0.1,testingData);
     //sgdTrain(const stdVecStdPairEigVec& trainingData, size_t miniBatches, size_t epochs, double learningRate);
     return 0;
 }

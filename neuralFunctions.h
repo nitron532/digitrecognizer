@@ -7,15 +7,16 @@
 #include <random>
 #include <ctime>
 #include <fstream>
-typedef std::vector<std::pair<Eigen::VectorXd, Eigen::VectorXd>> stdVecStdPairEigVec;
+typedef std::vector<std::pair<Eigen::VectorXd, Eigen::VectorXd>> imagesInputAndValue;
 class Network{
     private:
         size_t numLayers;
         std::vector<Eigen::MatrixXd> weights;
         std::vector<Eigen::VectorXd> biases;
-        std::vector<std::vector<Eigen::VectorXd>> feedForwardOneBatch(const stdVecStdPairEigVec& trainingData, size_t& marker, size_t miniBatches);
+        std::vector<Eigen::MatrixXd> feedForwardOneBatch(const Eigen::MatrixXd& batch);
+        void backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const Eigen::MatrixXd& oneHots, size_t thisBatchSize, double learningRate);
     public:
         Network(std::vector<size_t> sizes);
-        void sgdTrain(stdVecStdPairEigVec& trainingData, size_t miniBatches, size_t epochs, double learningRate);
-        void testNetwork(const stdVecStdPairEigVec& testingData);
+        void sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, size_t epochs, double learningRate,const imagesInputAndValue& testingData);
+        void testNetwork(const imagesInputAndValue& testingData);
 };
