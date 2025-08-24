@@ -40,6 +40,11 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
     for(int i = numLayers-3; i >= 0; i--){
         // std::cout << batchActivations[i].rows() << "x" << batchActivations[i].cols() << std::endl;
         // std::cout << weights[i+1].transpose().rows() << "x" << weights[i+1].cols() << std::endl;
+        std::cout << zs[i] << std::endl;
+        int test = 0;
+        std::cin >> test;
+        // std::cout << zs[i].rows() << "x" << zs[i].cols() << std::endl;
+        // std::cout << weights[i+1].rows() << "x" << weights[i+1].cols() << std::endl;
         delta = (weights[i+1].transpose() * delta).cwiseProduct(zs[i].unaryExpr(&reLuPrime));
         weightDeriv = (delta * batchActivations[i].transpose()) / thisBatchSize;
         biasDeriv = delta.rowwise().mean();
