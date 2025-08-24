@@ -46,7 +46,6 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
     }
 }
 
-
 std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd& batch, std::vector<Eigen::MatrixXd>& zs){
     zs.clear();
     //vector will be size numLayers, each item a matrix of activation layers for a specific layer for all the images (columns) in the batch
