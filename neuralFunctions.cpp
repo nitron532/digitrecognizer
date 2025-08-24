@@ -21,17 +21,14 @@ Network::Network(std::vector<size_t> sizes){
     std::random_device rd;
     std::mt19937 gen(rd());
     numLayers = sizes.size();
-for(size_t i = 0; i < sizes.size()-1; i++){
-    std::normal_distribution<double> he(0, sqrt(2.0 / sizes[i]));
-    weights.push_back(Eigen::MatrixXd(sizes[i+1], sizes[i]).unaryExpr([&](double){ return he(gen); }));
-    biases.push_back(Eigen::VectorXd::Zero(sizes[i+1]));
+    for(size_t i = 0; i < sizes.size()-1; i++){
+        std::normal_distribution<double> he(0, sqrt(2.0 / sizes[i]));
+        weights.push_back(Eigen::MatrixXd(sizes[i+1], sizes[i]).unaryExpr([&](double){ return he(gen); }));
+        biases.push_back(Eigen::VectorXd::Zero(sizes[i+1]));
+    }
 }
-}
-
-
 
 void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const Eigen::MatrixXd& oneHots, size_t thisBatchSize,double learningRate){
-    //figure out indexing on this
     std::vector<std::pair<Eigen::MatrixXd,Eigen::MatrixXd>> gradients;
     Eigen::MatrixXd delta = batchActivations.back() - oneHots;
     Eigen::MatrixXd weightDeriv = (delta * batchActivations[batchActivations.size()-2].transpose()) / thisBatchSize;
@@ -41,6 +38,8 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
     //numLayers includes input and output layers, since we updated the output layer weights/biases, start 
     //start at numLayers-3 because numLayers-2 is the output layer's weights (amt of weights is -1 numLayers)
     for(int i = numLayers-3; i >= 1; i--){
+        std::cout << batchActivations[i].rows() << "x" << batchActivations[i].cols() << std::endl;
+        std::cout << weights[i+1].transpose().rows() << "x" << weights[i+1].cols() << std::endl;
         delta = (weights[i+1].transpose() * delta).cwiseProduct(batchActivations[i].unaryExpr(&reLuPrime));
         weightDeriv = (delta * batchActivations[i].transpose()) / thisBatchSize;
         biasDeriv = delta.rowwise().mean();
@@ -109,9 +108,6 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
             }
             //each matrix represents one layer, and each column in that matrix is one images activations for that layer
             std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs);
-            // std::cout << batchActivations[2] << std::endl;
-            // int test = 0;
-            // std::cin >> test;
             backPropagation(batchActivations, oneHots, thisBatchSize, learningRate);
             j+= miniBatchSize;
         }
