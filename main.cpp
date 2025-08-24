@@ -66,8 +66,6 @@ std::vector<Eigen::VectorXd> one_hot_encode(const std::vector<int>& labels, int 
 }
 
 int main(){
-    // system("7z x data/t10k-images.idx3-ubyte.zip -odata/testingImages");
-    // system("7z x data/train-images.idx3-ubyte.zip -odata/trainingImages");
     std::vector<Eigen::VectorXd> trainingImages = load_mnist_images("data/trainingImages/train-images.idx3-ubyte");
     std::vector<Eigen::VectorXd> trainingLabels = one_hot_encode(load_mnist_labels("data/train-labels.idx1-ubyte"));
     std::vector<Eigen::VectorXd> testingImages =  load_mnist_images("data/testingImages/t10k-images.idx3-ubyte");
@@ -81,14 +79,24 @@ int main(){
             testingData.push_back({testingImages[i],testingLabels[i]});
         }
     }
-    /*
+    
+    std::cout << "miniBatchSize?" << std::endl; 
+    int miniBatchSize = 0;
+    std::cin >> miniBatchSize;
+    if (miniBatchSize <= 0){
+        std::cerr << "Mini batch size must be positive" << std::endl;
+    }
+    std::cout << "Epochs?" << std::endl; 
+    int epochs = 0;
+    std::cin >> epochs;
+    if (epochs <= 0){
+        std::cerr << "Epochs must be positive" << std::endl;
+    }
     std::cout << "How many hidden layers?" << std::endl;
     int layerCount = 0;
     std::cin >> layerCount;
     std::vector<size_t> layerVector = {784};
     if(layerCount < 0){
-        system("rmdir data/testingImages");
-        system("rmdir data/trainingImages");
         std::cerr << "Layer count must be nonnegative.";
     }
     for( size_t i = 0; i < layerCount; i++){
@@ -96,8 +104,6 @@ int main(){
         int neurons = 0;
         std::cin >> neurons;
         if(neurons <= 0){
-            system("rmdir data/testingImages");
-            system("rmdir data/trainingImages");
             std::cerr << "Must have atleast one neuron in each layer." << std::endl;
         }
         layerVector.push_back((size_t)neurons);
@@ -107,38 +113,12 @@ int main(){
     double learningRate = 0;
     std::cin >> learningRate;
     if (learningRate <= 0){
-        system("rmdir data/testingImages");
-        system("rmdir data/trainingImages");
         std::cerr << "Learning rate must be positive" << std::endl;
     }
-    std::cout << "Epochs?" << std::endl; 
-    int epochs = 0;
-    std::cin >> epochs;
-    if (epochs <= 0){
-        system("rmdir data/testingImages");
-        system("rmdir data/trainingImages");
-        std::cerr << "Epochs must be positive" << std::endl;
-    }
-    std::cout << "miniBatchSize?" << std::endl; 
-    int miniBatchSize = 0;
-    std::cin >> miniBatchSize;
-    if (miniBatchSize <= 0){
-        system("rmdir data/testingImages");
-        system("rmdir data/trainingImages");
-        std::cerr << "Mini batch size must be positive" << std::endl;
-    }
-    std::cout<< "Construting neural network... " << std::endl;
-    */
-//    std::vector<size_t> layerVector = {784,100,100,10};
-//     Network brain = Network(layerVector);
-//     std::cout<< "Constructed neural network! " << std::endl;
-//     std::cout << "Beginning stochastic gradient descent..." << std::endl;
-//     std::cout << trainingData.size() << " " << trainingData[0].first.size() << std::endl;
-//     brain.stochasticGradientDescent(trainingData, 30, 32, 1,testingData);
-    // brain.stochasticGradientDescent(trainingData, (size_t)epochs, (size_t)miniBatchSize, learningRate,testingData);
-    std::vector<size_t> layerVector = {784,256, 10};
+    
+    std::cout<< "Constructed neural network! " << std::endl;
     Network brain = Network(layerVector);
-    brain.sgdTrain(trainingData,32,30,0.1,testingData);
-    //sgdTrain(const stdVecStdPairEigVec& trainingData, size_t miniBatches, size_t epochs, double learningRate);
+    std::cout << "Beginning stochastic gradient descent..." << std::endl;
+    brain.sgdTrain(trainingData,miniBatchSize,epochs,learningRate,testingData);
     return 0;
 }
