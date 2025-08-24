@@ -38,13 +38,6 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
     //numLayers includes input and output layers, since we updated the output layer weights/biases, start 
     //start at numLayers-3 because numLayers-2 is the output layer's weights (amt of weights is -1 numLayers)
     for(int i = numLayers-3; i >= 0; i--){
-        // std::cout << batchActivations[i].rows() << "x" << batchActivations[i].cols() << std::endl;
-        // std::cout << weights[i+1].transpose().rows() << "x" << weights[i+1].cols() << std::endl;
-        std::cout << zs[i] << std::endl;
-        int test = 0;
-        std::cin >> test;
-        // std::cout << zs[i].rows() << "x" << zs[i].cols() << std::endl;
-        // std::cout << weights[i+1].rows() << "x" << weights[i+1].cols() << std::endl;
         delta = (weights[i+1].transpose() * delta).cwiseProduct(zs[i].unaryExpr(&reLuPrime));
         weightDeriv = (delta * batchActivations[i].transpose()) / thisBatchSize;
         biasDeriv = delta.rowwise().mean();
@@ -55,6 +48,7 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
 
 
 std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd& batch, std::vector<Eigen::MatrixXd>& zs){
+    zs.clear();
     //vector will be size numLayers, each item a matrix of activation layers for a specific layer for all the images (columns) in the batch
     std::vector<Eigen::MatrixXd> allBatchActivations = {batch};
     Eigen::MatrixXd batchActivationMatrix = batch; //assign first input for each image vector in matrix
@@ -66,6 +60,7 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
     }
     //softmax last matrix of activations (representing last layer of activations across all images in batch)
     batchActivationMatrix = (weights.back() * batchActivationMatrix).colwise() + biases.back();
+    zs.push_back(batchActivationMatrix);
     batchActivationMatrix = softMax(batchActivationMatrix);
     allBatchActivations.push_back(batchActivationMatrix);
     return allBatchActivations;
@@ -74,10 +69,10 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
 void Network::testNetwork(const imagesInputAndValue& testingData){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
-    std::vector<Eigen::MatrixXd> zs;
+    std::vector<Eigen::MatrixXd> zTest;
     for(size_t i = 0; i < testingData.size(); i++){
         //could do batches of testing, rn should be a bunch of column vectors
-        results.push_back({feedForwardOneBatch(testingData[i].first,zs).back(), testingData[i].second});
+        results.push_back({feedForwardOneBatch(testingData[i].first,zTest).back(), testingData[i].second});
         int maxIndexResult = 0;
         int maxIndexExpected = 0;
         //j represents index of highest probability
