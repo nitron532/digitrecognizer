@@ -1,6 +1,7 @@
-MNIST Handwritten Digit Neural Network <br>
+<h1>MNIST Handwritten Digit Neural Network </h1> <br>
 Implemented using C++, Eigen library for linear algebra <br>
 Loss: Categorical Cross Entropy <br>
 Activations: ReLu (hidden layers), Softmax (output layer) <br>
 Initialization: He <br>
 Highest accuracy achieved 98%
+
