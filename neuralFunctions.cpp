@@ -28,7 +28,7 @@ Network::Network(std::vector<size_t> sizes){
     }
 }
 
-void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const Eigen::MatrixXd& oneHots, size_t thisBatchSize,double learningRate){
+void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const std::vector<Eigen::MatrixXd>& zs, const Eigen::MatrixXd& oneHots, size_t thisBatchSize,double learningRate){
     std::vector<std::pair<Eigen::MatrixXd,Eigen::MatrixXd>> gradients;
     Eigen::MatrixXd delta = batchActivations.back() - oneHots;
     Eigen::MatrixXd weightDeriv = (delta * batchActivations[batchActivations.size()-2].transpose()) / thisBatchSize;
@@ -37,10 +37,10 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
     biases.back() -= learningRate*biasDeriv;
     //numLayers includes input and output layers, since we updated the output layer weights/biases, start 
     //start at numLayers-3 because numLayers-2 is the output layer's weights (amt of weights is -1 numLayers)
-    for(int i = numLayers-3; i >= 1; i--){
-        std::cout << batchActivations[i].rows() << "x" << batchActivations[i].cols() << std::endl;
-        std::cout << weights[i+1].transpose().rows() << "x" << weights[i+1].cols() << std::endl;
-        delta = (weights[i+1].transpose() * delta).cwiseProduct(batchActivations[i].unaryExpr(&reLuPrime));
+    for(int i = numLayers-3; i >= 0; i--){
+        // std::cout << batchActivations[i].rows() << "x" << batchActivations[i].cols() << std::endl;
+        // std::cout << weights[i+1].transpose().rows() << "x" << weights[i+1].cols() << std::endl;
+        delta = (weights[i+1].transpose() * delta).cwiseProduct(zs[i].unaryExpr(&reLuPrime));
         weightDeriv = (delta * batchActivations[i].transpose()) / thisBatchSize;
         biasDeriv = delta.rowwise().mean();
         weights[i] -= learningRate*weightDeriv;
@@ -49,12 +49,13 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
 }
 
 
-std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd& batch){
+std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd& batch, std::vector<Eigen::MatrixXd>& zs){
     //vector will be size numLayers, each item a matrix of activation layers for a specific layer for all the images (columns) in the batch
     std::vector<Eigen::MatrixXd> allBatchActivations = {batch};
     Eigen::MatrixXd batchActivationMatrix = batch; //assign first input for each image vector in matrix
     for(size_t l =0; l < numLayers - 2; l++){
         batchActivationMatrix = (weights[l] * batchActivationMatrix).colwise() + biases[l];
+        zs.push_back(batchActivationMatrix);
         batchActivationMatrix = batchActivationMatrix.array().max(0); //reLu
         allBatchActivations.push_back(batchActivationMatrix);
     }
@@ -68,9 +69,10 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
 void Network::testNetwork(const imagesInputAndValue& testingData){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
+    std::vector<Eigen::MatrixXd> zs;
     for(size_t i = 0; i < testingData.size(); i++){
         //could do batches of testing, rn should be a bunch of column vectors
-        results.push_back({feedForwardOneBatch(testingData[i].first).back(), testingData[i].second});
+        results.push_back({feedForwardOneBatch(testingData[i].first,zs).back(), testingData[i].second});
         int maxIndexResult = 0;
         int maxIndexExpected = 0;
         //j represents index of highest probability
@@ -107,8 +109,9 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
                 oneHots.col(batchIndex) = trainingData[k].second;
             }
             //each matrix represents one layer, and each column in that matrix is one images activations for that layer
-            std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs);
-            backPropagation(batchActivations, oneHots, thisBatchSize, learningRate);
+            std::vector<Eigen::MatrixXd> zs;
+            std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
+            backPropagation(batchActivations, zs, oneHots, thisBatchSize, learningRate);
             j+= miniBatchSize;
         }
         std::cout << "Epoch " << i << ": ";

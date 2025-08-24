@@ -13,8 +13,8 @@ class Network{
         size_t numLayers;
         std::vector<Eigen::MatrixXd> weights;
         std::vector<Eigen::VectorXd> biases;
-        std::vector<Eigen::MatrixXd> feedForwardOneBatch(const Eigen::MatrixXd& batch);
-        void backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const Eigen::MatrixXd& oneHots, size_t thisBatchSize, double learningRate);
+        std::vector<Eigen::MatrixXd> feedForwardOneBatch(const Eigen::MatrixXd& batch, std::vector<Eigen::MatrixXd>& zs);
+        void backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const std::vector<Eigen::MatrixXd>& zs, const Eigen::MatrixXd& oneHots, size_t thisBatchSize, double learningRate);
     public:
         Network(std::vector<size_t> sizes);
         void sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, size_t epochs, double learningRate,const imagesInputAndValue& testingData);
