@@ -35,7 +35,7 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
     Eigen::MatrixXd biasDeriv = delta.rowwise().mean();
     weights.back() -= learningRate*weightDeriv;
     biases.back() -= learningRate*biasDeriv;
-    //numLayers includes input and output layers, since we updated the output layer weights/biases, start 
+    //numLayers includes input and output layers, since we updated the output layer weights/biases 
     //start at numLayers-3 because numLayers-2 is the output layer's weights (amt of weights is -1 numLayers)
     for(int i = numLayers-3; i >= 0; i--){
         delta = (weights[i+1].transpose() * delta).cwiseProduct(zs[i].unaryExpr(&reLuPrime));
@@ -117,3 +117,4 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
         testNetwork(testingData);
     }
 }
+
