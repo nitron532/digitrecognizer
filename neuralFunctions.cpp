@@ -67,8 +67,8 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
 void Network::testNetwork(const imagesInputAndValue& testingData){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
-    std::vector<Eigen::MatrixXd> zTest;
     for(size_t i = 0; i < testingData.size(); i++){
+        std::vector<Eigen::MatrixXd> zTest;
         //could do batches of testing, rn should be a bunch of column vectors
         results.push_back({feedForwardOneBatch(testingData[i].first,zTest).back(), testingData[i].second});
         int maxIndexResult = 0;
@@ -116,5 +116,6 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
         testNetwork(testingData);
     }
 }
+
 
 
