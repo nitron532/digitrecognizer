@@ -1,7 +1,6 @@
 
 main
 old/
-results.txt
-weights.txt
+notes.txt
 data/
 eigen/

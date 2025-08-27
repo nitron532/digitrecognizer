@@ -113,7 +113,11 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
             backPropagation(batchActivations, zs, oneHots, thisBatchSize, learningRate);
             j+= miniBatchSize;
         }
+        time_t timestamp;
+        time(&timestamp);
+        std::cout << ctime(&timestamp) << ": ";
         std::cout << "Epoch " << i << ": ";
         testNetwork(testingData);
+        std::cout << std::endl;
     }
 }

@@ -118,7 +118,9 @@ int main(){
     
     std::cout<< "Constructed neural network! " << std::endl;
     Network brain = Network(layerVector);
-    std::cout << "Beginning stochastic gradient descent..." << std::endl;
+    time_t timestamp;
+    time(&timestamp);
+    std::cout << "Beginning stochastic gradient descent at " << ctime(&timestamp) << std::endl;
     brain.sgdTrain(trainingData,miniBatchSize,epochs,learningRate,testingData);
     return 0;
 }
