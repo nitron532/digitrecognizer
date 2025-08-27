@@ -73,7 +73,6 @@ void Network::testNetwork(const imagesInputAndValue& testingData){
         results.push_back({feedForwardOneBatch(testingData[i].first,zTest).back(), testingData[i].second});
         int maxIndexResult = 0;
         int maxIndexExpected = 0;
-        //j represents index of highest probability
         for (size_t j = 1; j < results[i].first.rows(); j++){
             if (results[i].first(j,0) > results[i].first(maxIndexResult,0)){
                 maxIndexResult = j;
