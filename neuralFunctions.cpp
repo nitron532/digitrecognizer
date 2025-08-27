@@ -35,7 +35,7 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
     Eigen::MatrixXd biasDeriv = delta.rowwise().mean();
     weights.back() -= learningRate*weightDeriv;
     biases.back() -= learningRate*biasDeriv;
-    //numLayers includes input and output layers, since we updated the output layer weights/biases, start 
+    //numLayers includes input and output layers, since we updated the output layer weights/biases 
     //start at numLayers-3 because numLayers-2 is the output layer's weights (amt of weights is -1 numLayers)
     for(int i = numLayers-3; i >= 0; i--){
         delta = (weights[i+1].transpose() * delta).cwiseProduct(zs[i].unaryExpr(&reLuPrime));
@@ -47,7 +47,6 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
 }
 
 std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd& batch, std::vector<Eigen::MatrixXd>& zs){
-    zs.clear();
     //vector will be size numLayers, each item a matrix of activation layers for a specific layer for all the images (columns) in the batch
     std::vector<Eigen::MatrixXd> allBatchActivations = {batch};
     Eigen::MatrixXd batchActivationMatrix = batch; //assign first input for each image vector in matrix
@@ -68,8 +67,8 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
 void Network::testNetwork(const imagesInputAndValue& testingData){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
-    std::vector<Eigen::MatrixXd> zTest;
     for(size_t i = 0; i < testingData.size(); i++){
+        std::vector<Eigen::MatrixXd> zTest;
         //could do batches of testing, rn should be a bunch of column vectors
         results.push_back({feedForwardOneBatch(testingData[i].first,zTest).back(), testingData[i].second});
         int maxIndexResult = 0;
@@ -121,3 +120,6 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
         std::cout << std::endl;
     }
 }
+
+
+
