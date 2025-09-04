@@ -17,10 +17,23 @@ Eigen::MatrixXd softMax(const Eigen::MatrixXd& Z) {
     return result;
 }
 
-Network::Network(std::vector<size_t> sizes){
+Network::Network(std::vector<size_t>& sizes,
+                 imagesInputAndValue& trainingData,
+                 size_t mBS, size_t e, 
+                 double r,
+                 double lR, 
+                 const imagesInputAndValue& testingData) : 
+                 testingData(testingData), 
+                 trainingData(trainingData){
+
     std::random_device rd;
     std::mt19937 gen(rd());
     numLayers = sizes.size();
+    inputSize = trainingData.size();
+    miniBatchSize = mBS;
+    epochs = e;
+    learningRate = lR;
+    reg = r;
     for(size_t i = 0; i < sizes.size()-1; i++){
         std::normal_distribution<double> he(0, sqrt(2.0 / sizes[i]));
         weights.push_back(Eigen::MatrixXd(sizes[i+1], sizes[i]).unaryExpr([&](double){ return he(gen); }));
@@ -28,7 +41,11 @@ Network::Network(std::vector<size_t> sizes){
     }
 }
 
-void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const std::vector<Eigen::MatrixXd>& zs, const Eigen::MatrixXd& oneHots, size_t thisBatchSize,double learningRate){
+void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations,
+                              const std::vector<Eigen::MatrixXd>& zs,
+                              const Eigen::MatrixXd& oneHots, 
+                              size_t thisBatchSize){
+
     std::vector<std::pair<Eigen::MatrixXd,Eigen::MatrixXd>> gradients;
     Eigen::MatrixXd delta = batchActivations.back() - oneHots;
     Eigen::MatrixXd weightDeriv = (delta * batchActivations[batchActivations.size()-2].transpose()) / thisBatchSize;
@@ -41,7 +58,8 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
         delta = (weights[i+1].transpose() * delta).cwiseProduct(zs[i].unaryExpr(&reLuPrime));
         weightDeriv = (delta * batchActivations[i].transpose()) / thisBatchSize;
         biasDeriv = delta.rowwise().mean();
-        weights[i] -= learningRate*weightDeriv;
+        // weights[i] -= learningRate*weightDeriv;
+        weights[i] = (1.0-(learningRate*reg)/inputSize) * weights[i] - learningRate* weightDeriv;
         biases[i] -= learningRate*biasDeriv;
     }
 }
@@ -64,7 +82,7 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
     return allBatchActivations;
 }
 
-void Network::testNetwork(const imagesInputAndValue& testingData){
+void Network::testNetwork(){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
     for(size_t i = 0; i < testingData.size(); i++){
@@ -86,16 +104,15 @@ void Network::testNetwork(const imagesInputAndValue& testingData){
     std::cout << correctCount << " / " << testingData.size() << std::endl;
 }
 
-void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, size_t epochs, double learningRate, const imagesInputAndValue& testingData){
+void Network::sgdTrain(){
     auto rng = std::default_random_engine {};
     for(size_t i = 0; i < epochs; i++){
         std::shuffle(trainingData.begin(),trainingData.end(), rng);
-
         size_t j = 0;
-        while(j < trainingData.size()){
+        while(j < inputSize){
             size_t end = j + miniBatchSize;
-            if(end >= trainingData.size()){
-                end = trainingData.size();
+            if(end >= inputSize){
+                end = inputSize;
             }
             size_t thisBatchSize = end-j;
             Eigen::MatrixXd batchInputs(784, thisBatchSize);
@@ -105,17 +122,16 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
                 batchInputs.col(batchIndex) = trainingData[k].first;
                 oneHots.col(batchIndex) = trainingData[k].second;
             }
-            //each matrix represents one layer, and each column in that matrix is one images activations for that layer
             std::vector<Eigen::MatrixXd> zs;
             std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
-            backPropagation(batchActivations, zs, oneHots, thisBatchSize, learningRate);
+            backPropagation(batchActivations, zs, oneHots, thisBatchSize);
             j+= miniBatchSize;
         }
         time_t timestamp;
         time(&timestamp);
         std::cout << ctime(&timestamp) << ": ";
         std::cout << "Epoch " << i << ": ";
-        testNetwork(testingData);
+        testNetwork();
         std::cout << std::endl;
     }
 }
