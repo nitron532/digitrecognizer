@@ -115,12 +115,17 @@ int main(){
     if (learningRate <= 0){
         std::cerr << "Learning rate must be positive" << std::endl;
     }
-    
+    std::cout << "Regularization?" << std::endl;
+    double reg = 0;
+    std::cin >> reg;
+    if (reg <= 0){
+        std::cerr << "Regularization must be positive" << std::endl;
+    }
     std::cout<< "Constructed neural network! " << std::endl;
     Network brain = Network(layerVector);
     time_t timestamp;
     time(&timestamp);
     std::cout << "Beginning stochastic gradient descent at " << ctime(&timestamp) << std::endl;
-    brain.sgdTrain(trainingData,miniBatchSize,epochs,learningRate,testingData);
+    brain.sgdTrain(trainingData,miniBatchSize,epochs,learningRate,testingData, reg);
     return 0;
 }
