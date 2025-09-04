@@ -58,7 +58,6 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
         delta = (weights[i+1].transpose() * delta).cwiseProduct(zs[i].unaryExpr(&reLuPrime));
         weightDeriv = (delta * batchActivations[i].transpose()) / thisBatchSize;
         biasDeriv = delta.rowwise().mean();
-        // weights[i] -= learningRate*weightDeriv;
         weights[i] = (1.0-(learningRate*reg)/inputSize) * weights[i] - learningRate* weightDeriv;
         biases[i] -= learningRate*biasDeriv;
     }
@@ -135,6 +134,7 @@ void Network::sgdTrain(){
         std::cout << std::endl;
     }
 }
+
 
 
 
