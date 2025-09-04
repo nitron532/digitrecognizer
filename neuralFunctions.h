@@ -7,17 +7,75 @@
 #include <random>
 #include <ctime>
 #include <fstream>
+/*
+This class implements a neural network which uses mini-batch stochastic gradient descent.
+Loss - Categorical Cross Entropy
+Activations - Softmax for output, ReLu for hidden
+Initialization - He
+L2 Regularization
+*/
+
+/*
+imagesInputAndValue
+A list of all images in the training/testing data.
+Stores a pair, where
+first -> the actual pixel values, a column vector of 784 x 1
+second -> the actual digit the image represents, a onehot column vector of 10 x 1
+*/
 typedef std::vector<std::pair<Eigen::VectorXd, Eigen::VectorXd>> imagesInputAndValue;
+
 class Network{
     private:
-        size_t inputSize = 1;
-        size_t numLayers;
+        size_t inputSize = 1; //how many images to train with
+        size_t numLayers = 2; //total amount of layers
+        size_t miniBatchSize = 1; //chosen mini-batch size
+        size_t epochs = 1; //how many epochs to train for
+        double learningRate = 1;
+        double reg = 1; //lambda aka regularization parameter
         std::vector<Eigen::MatrixXd> weights;
         std::vector<Eigen::VectorXd> biases;
+        imagesInputAndValue& trainingData; //non-const since it's shuffled for SGD
+        const imagesInputAndValue& testingData;
+
+        /*
+        feedForwardOneBatch()
+        feeds forward a matrix of 784 x miniBatchSize, where each column is an image 
+        zs is passed in by reference to record weighted inputs pre-activation, where each column of a matrix is an image's weighted inputs at that layer
+        if the last batch isnt of miniBatchSize (for example if inputSize = 67 and miniBatchSize = 32), the amount of columns is the remainder
+        returns a vector of matrices, where each matrix corresponds to a layer, and each column of that matrix is a specific image's activation from that layer
+        */
         std::vector<Eigen::MatrixXd> feedForwardOneBatch(const Eigen::MatrixXd& batch, std::vector<Eigen::MatrixXd>& zs);
-        void backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const std::vector<Eigen::MatrixXd>& zs, const Eigen::MatrixXd& oneHots, size_t thisBatchSize, double learningRate, double reg);
+
+        /*
+        backPropagation()
+        calcualtes deltas for batchActivations and updates weights and biases
+        batchActivations is the return value from feedForwardOneBatch()
+        zs is the modified parameter from feedForwardOneBatch()
+        oneHots is a 10 x miniBatchSize (or remaining images size) matrix, where each column of a matrix is an image's respective digit in a onehot vector
+        thisBatchSize is the size of the batch (usually miniBatchSize, though could be remainder)
+        */
+        void backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations,
+                             const std::vector<Eigen::MatrixXd>& zs, 
+                             const Eigen::MatrixXd& oneHots, 
+                             size_t thisBatchSize);
     public:
-        Network(std::vector<size_t> sizes);
-        void sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, size_t epochs, double learningRate,const imagesInputAndValue& testingData, double reg);
-        void testNetwork(const imagesInputAndValue& testingData);
+        Network(std::vector<size_t>& sizes, 
+                imagesInputAndValue& trainingData, 
+                size_t miniBatchSize, 
+                size_t epochs, 
+                double reg,
+                double learningRate, 
+                const imagesInputAndValue& testingData);
+        /*
+        sgdTrain()
+        runs feed forwarding then backpropagation functions for each minibatch created, epochs amount of times
+        runs testNetwork at the end of each epoch to evaluate accuracy
+        */
+        void sgdTrain();
+        /*
+        testNetwork()
+        feeds forward test images through the trained network, and compares the final activation with the actual onehot vector value (no backprop done since we're not training on test data)
+        couts results
+        */
+        void testNetwork();
 };

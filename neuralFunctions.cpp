@@ -17,10 +17,23 @@ Eigen::MatrixXd softMax(const Eigen::MatrixXd& Z) {
     return result;
 }
 
-Network::Network(std::vector<size_t> sizes){
+Network::Network(std::vector<size_t>& sizes,
+                 imagesInputAndValue& trainingData,
+                 size_t miniBatchSize, size_t epochs, 
+                 double reg,
+                 double learningRate, 
+                 const imagesInputAndValue& testingData) : 
+                 testingData(testingData), 
+                 trainingData(trainingData){
+
     std::random_device rd;
     std::mt19937 gen(rd());
     numLayers = sizes.size();
+    inputSize = trainingData.size();
+    miniBatchSize = miniBatchSize;
+    epochs = epochs;
+    learningRate = learningRate;
+    reg = reg;
     for(size_t i = 0; i < sizes.size()-1; i++){
         std::normal_distribution<double> he(0, sqrt(2.0 / sizes[i]));
         weights.push_back(Eigen::MatrixXd(sizes[i+1], sizes[i]).unaryExpr([&](double){ return he(gen); }));
@@ -28,7 +41,11 @@ Network::Network(std::vector<size_t> sizes){
     }
 }
 
-void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations, const std::vector<Eigen::MatrixXd>& zs, const Eigen::MatrixXd& oneHots, size_t thisBatchSize,double learningRate, double reg){
+void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations,
+                              const std::vector<Eigen::MatrixXd>& zs,
+                              const Eigen::MatrixXd& oneHots, 
+                              size_t thisBatchSize){
+
     std::vector<std::pair<Eigen::MatrixXd,Eigen::MatrixXd>> gradients;
     Eigen::MatrixXd delta = batchActivations.back() - oneHots;
     Eigen::MatrixXd weightDeriv = (delta * batchActivations[batchActivations.size()-2].transpose()) / thisBatchSize;
@@ -65,10 +82,10 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
     return allBatchActivations;
 }
 
-void Network::testNetwork(const imagesInputAndValue& testingData){
+void Network::testNetwork(){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
-    for(size_t i = 0; i < testingData.size(); i++){
+    for(size_t i = 0; i < inputSize; i++){
         std::vector<Eigen::MatrixXd> zTest;
         //could do batches of testing, rn should be a bunch of column vectors
         results.push_back({feedForwardOneBatch(testingData[i].first,zTest).back(), testingData[i].second});
@@ -87,17 +104,15 @@ void Network::testNetwork(const imagesInputAndValue& testingData){
     std::cout << correctCount << " / " << testingData.size() << std::endl;
 }
 
-void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, size_t epochs, double learningRate, const imagesInputAndValue& testingData, double reg){
-    inputSize = trainingData.size();
+void Network::sgdTrain(){
     auto rng = std::default_random_engine {};
     for(size_t i = 0; i < epochs; i++){
         std::shuffle(trainingData.begin(),trainingData.end(), rng);
-
         size_t j = 0;
-        while(j < trainingData.size()){
+        while(j < inputSize){
             size_t end = j + miniBatchSize;
-            if(end >= trainingData.size()){
-                end = trainingData.size();
+            if(end >= inputSize){
+                end = inputSize;
             }
             size_t thisBatchSize = end-j;
             Eigen::MatrixXd batchInputs(784, thisBatchSize);
@@ -109,15 +124,16 @@ void Network::sgdTrain(imagesInputAndValue& trainingData, size_t miniBatchSize, 
             }
             //each matrix represents one layer, and each column in that matrix is one images activations for that layer
             std::vector<Eigen::MatrixXd> zs;
+            //zs will be modified in feedForward as it passes by reference: weighted inputs are recorded during feedforward
             std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
-            backPropagation(batchActivations, zs, oneHots, thisBatchSize, learningRate, reg);
+            backPropagation(batchActivations, zs, oneHots, thisBatchSize);
             j+= miniBatchSize;
         }
         time_t timestamp;
         time(&timestamp);
         std::cout << ctime(&timestamp) << ": ";
         std::cout << "Epoch " << i << ": ";
-        testNetwork(testingData);
+        testNetwork();
         std::cout << std::endl;
     }
 }
