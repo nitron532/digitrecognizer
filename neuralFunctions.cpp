@@ -19,9 +19,9 @@ Eigen::MatrixXd softMax(const Eigen::MatrixXd& Z) {
 
 Network::Network(std::vector<size_t>& sizes,
                  imagesInputAndValue& trainingData,
-                 size_t miniBatchSize, size_t epochs, 
-                 double reg,
-                 double learningRate, 
+                 size_t mBS, size_t e, 
+                 double r,
+                 double lR, 
                  const imagesInputAndValue& testingData) : 
                  testingData(testingData), 
                  trainingData(trainingData){
@@ -30,10 +30,10 @@ Network::Network(std::vector<size_t>& sizes,
     std::mt19937 gen(rd());
     numLayers = sizes.size();
     inputSize = trainingData.size();
-    miniBatchSize = miniBatchSize;
-    epochs = epochs;
-    learningRate = learningRate;
-    reg = reg;
+    miniBatchSize = mBS;
+    epochs = e;
+    learningRate = lR;
+    reg = r;
     for(size_t i = 0; i < sizes.size()-1; i++){
         std::normal_distribution<double> he(0, sqrt(2.0 / sizes[i]));
         weights.push_back(Eigen::MatrixXd(sizes[i+1], sizes[i]).unaryExpr([&](double){ return he(gen); }));
@@ -85,7 +85,7 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
 void Network::testNetwork(){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
-    for(size_t i = 0; i < inputSize; i++){
+    for(size_t i = 0; i < testingData.size(); i++){
         std::vector<Eigen::MatrixXd> zTest;
         //could do batches of testing, rn should be a bunch of column vectors
         results.push_back({feedForwardOneBatch(testingData[i].first,zTest).back(), testingData[i].second});
@@ -122,9 +122,7 @@ void Network::sgdTrain(){
                 batchInputs.col(batchIndex) = trainingData[k].first;
                 oneHots.col(batchIndex) = trainingData[k].second;
             }
-            //each matrix represents one layer, and each column in that matrix is one images activations for that layer
             std::vector<Eigen::MatrixXd> zs;
-            //zs will be modified in feedForward as it passes by reference: weighted inputs are recorded during feedforward
             std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
             backPropagation(batchActivations, zs, oneHots, thisBatchSize);
             j+= miniBatchSize;
