@@ -32,6 +32,7 @@ class Network{
         size_t epochs = 1; //how many epochs to train for
         double learningRate = 1;
         double reg = 1; //lambda aka regularization parameter
+        double dropout = 0;
         std::vector<Eigen::MatrixXd> weights;
         std::vector<Eigen::VectorXd> biases;
         imagesInputAndValue& trainingData; //non-const since it's shuffled for SGD
@@ -61,10 +62,11 @@ class Network{
     public:
         Network(std::vector<size_t>& sizes, 
                 imagesInputAndValue& trainingData, 
-                size_t miniBatchSize, 
-                size_t epochs, 
-                double reg,
-                double learningRate, 
+                size_t mBS, 
+                size_t e, 
+                double r,
+                double lR, 
+                double drop,
                 const imagesInputAndValue& testingData);
         /*
         sgdTrain()

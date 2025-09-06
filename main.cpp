@@ -121,11 +121,18 @@ int main(){
     if (reg <= 0){
         std::cerr << "Regularization must be positive" << std::endl;
     }
+    std::cout << "Dropout?" << std::endl;
+    double drop = 0;
+    std::cin >> drop;
+    if (drop < 0 || drop >= 1){
+        std::cerr << "Dropout probability must be between [0,1)" << std::endl;
+    }
     std::cout<< "Constructed neural network! " << std::endl;
-    Network brain = Network(layerVector,trainingData, miniBatchSize, epochs, reg, learningRate, testingData);
+    Network brain = Network(layerVector,trainingData, miniBatchSize, epochs, reg, drop, learningRate, testingData);
     time_t timestamp;
     time(&timestamp);
     std::cout << "Beginning stochastic gradient descent at " << ctime(&timestamp) << std::endl;
+    srand(time(0));
     brain.sgdTrain();
     return 0;
 }
