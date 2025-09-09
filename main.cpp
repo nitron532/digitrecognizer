@@ -128,7 +128,7 @@ int main(){
         std::cerr << "Dropout probability must be between [0,1)" << std::endl;
     }
     std::cout<< "Constructed neural network! " << std::endl;
-    Network brain = Network(layerVector,trainingData, miniBatchSize, epochs, reg, drop, learningRate, testingData);
+    Network brain = Network(layerVector,trainingData, miniBatchSize, epochs, reg, learningRate, drop, testingData);
     time_t timestamp;
     time(&timestamp);
     std::cout << "Beginning stochastic gradient descent at " << ctime(&timestamp) << std::endl;

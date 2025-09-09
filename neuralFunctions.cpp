@@ -77,10 +77,9 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
         Eigen::MatrixXd mask = Eigen::MatrixXd::Zero(batchActivationMatrix.rows(),batchActivationMatrix.cols());
         for(size_t r = 0; r < mask.rows(); r++){
             for (size_t c = 0; c < mask.cols(); c++){
-                mask(r,c) = (((double)rand())/ RAND_MAX) > dropout ? 1.0 / (1-dropout) : 0.0;
+                mask(r,c) = (((double)rand())/ RAND_MAX) > dropout ? 1.0 / (1.0-dropout) : 0.0;
             }
         }
-        batchActivationMatrix.cwiseProduct(mask);
         allBatchActivations.push_back(batchActivationMatrix);
     }
     //softmax last matrix of activations (representing last layer of activations across all images in batch)
