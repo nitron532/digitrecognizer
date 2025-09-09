@@ -22,6 +22,7 @@ Network::Network(std::vector<size_t>& sizes,
                  size_t mBS, size_t e, 
                  double r,
                  double lR, 
+                 double drop,
                  const imagesInputAndValue& testingData) : 
                  testingData(testingData), 
                  trainingData(trainingData){
@@ -34,6 +35,7 @@ Network::Network(std::vector<size_t>& sizes,
     epochs = e;
     learningRate = lR;
     reg = r;
+    dropout = drop;
     for(size_t i = 0; i < sizes.size()-1; i++){
         std::normal_distribution<double> he(0, sqrt(2.0 / sizes[i]));
         weights.push_back(Eigen::MatrixXd(sizes[i+1], sizes[i]).unaryExpr([&](double){ return he(gen); }));
@@ -67,10 +69,17 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
     //vector will be size numLayers, each item a matrix of activation layers for a specific layer for all the images (columns) in the batch
     std::vector<Eigen::MatrixXd> allBatchActivations = {batch};
     Eigen::MatrixXd batchActivationMatrix = batch; //assign first input for each image vector in matrix
-    for(size_t l =0; l < numLayers - 2; l++){
+    for(size_t l = 0; l < numLayers - 2; l++){
         batchActivationMatrix = (weights[l] * batchActivationMatrix).colwise() + biases[l];
         zs.push_back(batchActivationMatrix);
         batchActivationMatrix = batchActivationMatrix.array().max(0); //reLu
+        //dropout
+        Eigen::MatrixXd mask = Eigen::MatrixXd::Zero(batchActivationMatrix.rows(),batchActivationMatrix.cols());
+        for(size_t r = 0; r < mask.rows(); r++){
+            for (size_t c = 0; c < mask.cols(); c++){
+                mask(r,c) = (((double)rand())/ RAND_MAX) > dropout ? 1.0 / (1.0-dropout) : 0.0;
+            }
+        }
         allBatchActivations.push_back(batchActivationMatrix);
     }
     //softmax last matrix of activations (representing last layer of activations across all images in batch)
