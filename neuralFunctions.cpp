@@ -146,6 +146,7 @@ void Network::sgdTrain(){
             std::vector<Eigen::MatrixXd> zs;
             std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
             backPropagation(batchActivations, zs, oneHots, thisBatchSize);
+            //log every other loss as to not overload graph
             if((j/miniBatchSize)%2==0){
                 logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
             }

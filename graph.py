@@ -4,6 +4,15 @@ import time
 import re
 import math
 
+
+"""
+might wanna add markers on the graph to distinguish between different epochs. 
+maybe generate loss graph per epoch? or is that too many graphs? idk
+x axis graph gets so large it's almost meaningless, might want to change to rolling window
+"""
+
+
+
 def follow(thefile):
     thefile.seek(0,2)
     while True:
@@ -34,9 +43,13 @@ batches = []
 def updateAxes(xdata,ydata):
     line.set_xdata(xdata)
     line.set_ydata(ydata)
-    if len(xdata) > 0:
+    if len(xdata) > 0: #zoom out x axis forever
         ax.set_xlim(0, max(xdata) + 1)  
-
+    WINDOW = 250 #only show last WINDOW batches, maybe calculate amt of batches per epoch and set that as window?
+    if len(xdata) > WINDOW:
+        xdata = xdata[-WINDOW:]
+        ydata = ydata[-WINDOW:]
+        ax.set_xlim(min(xdata), max(xdata))
     if len(ydata) > 0:
         yMin = min(ydata)
         yMax = max(ydata)
