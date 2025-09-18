@@ -79,7 +79,8 @@ int main(){
             testingData.push_back({testingImages[i],testingLabels[i]});
         }
     }
-    
+    //graph.py matplotlib dependency only works through powershell right now so i have to call it through there
+    system("powershell.exe -Command \"Start-Process ~\\OneDrive\\Desktop\\digitrecognizer\\venv\\Scripts\\python.exe graph.py\"");
     std::cout << "miniBatchSize?" << std::endl; 
     int miniBatchSize = 0;
     std::cin >> miniBatchSize;
@@ -139,8 +140,6 @@ int main(){
     time(&timestamp);
     std::cout << "Beginning stochastic gradient descent at " << ctime(&timestamp) << std::endl;
     srand(time(0));
-    // system("py graph.py");
-    system("powershell.exe -Command \"~\\OneDrive\\Desktop\\digitrecognizer\\venv\\Scripts\\python.exe ~\\OneDrive\\Desktop\\digitrecognizer\\graph.py\"");
     brain.sgdTrain();
     return 0;
 }

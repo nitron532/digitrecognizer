@@ -146,7 +146,9 @@ void Network::sgdTrain(){
             std::vector<Eigen::MatrixXd> zs;
             std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
             backPropagation(batchActivations, zs, oneHots, thisBatchSize);
-            logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
+            if((j/miniBatchSize)%2==0){
+                logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
+            }
             j+= miniBatchSize;
         }
         time_t timestamp;
