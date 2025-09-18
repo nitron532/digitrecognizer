@@ -13,6 +13,7 @@ Loss - Categorical Cross Entropy
 Activations - Softmax for output, ReLu for hidden
 Initialization - He
 L2 Regularization
+Dropout
 */
 
 /*
@@ -49,7 +50,7 @@ class Network{
 
         /*
         backPropagation()
-        calcualtes deltas for batchActivations and updates weights and biases
+        calculates deltas for batchActivations (one batch) and updates weights and biases
         batchActivations is the return value from feedForwardOneBatch()
         zs is the modified parameter from feedForwardOneBatch()
         oneHots is a 10 x miniBatchSize (or remaining images size) matrix, where each column of a matrix is an image's respective digit in a onehot vector
@@ -59,6 +60,13 @@ class Network{
                              const std::vector<Eigen::MatrixXd>& zs, 
                              const Eigen::MatrixXd& oneHots, 
                              size_t thisBatchSize);
+        
+
+        /*
+        crossEntropyLoss()
+        Calculates loss per backprop. Used to return value to monitoring modules.
+        */
+        double crossEntropyLoss(const Eigen::MatrixXd& softMaxActivations, const Eigen::MatrixXd& expectedOutputs);
     public:
         Network(std::vector<size_t>& sizes, 
                 imagesInputAndValue& trainingData, 
@@ -77,7 +85,7 @@ class Network{
         /*
         testNetwork()
         feeds forward test images through the trained network, and compares the final activation with the actual onehot vector value (no backprop done since we're not training on test data)
-        couts results
+        returns amount of correctly identified images
         */
-        void testNetwork();
+        size_t testNetwork();
 };

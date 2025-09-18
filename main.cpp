@@ -85,12 +85,14 @@ int main(){
     std::cin >> miniBatchSize;
     if (miniBatchSize <= 0){
         std::cerr << "Mini batch size must be positive" << std::endl;
+        std::exit(1);
     }
     std::cout << "Epochs?" << std::endl; 
     int epochs = 0;
     std::cin >> epochs;
     if (epochs <= 0){
         std::cerr << "Epochs must be positive" << std::endl;
+        std::exit(1);
     }
     std::cout << "How many hidden layers?" << std::endl;
     int layerCount = 0;
@@ -98,6 +100,7 @@ int main(){
     std::vector<size_t> layerVector = {784};
     if(layerCount < 0){
         std::cerr << "Layer count must be nonnegative.";
+        std::exit(1);
     }
     for( size_t i = 0; i < layerCount; i++){
         std::cout << "For layer " << i+1 << ", how many neurons?" << std::endl;
@@ -105,6 +108,7 @@ int main(){
         std::cin >> neurons;
         if(neurons <= 0){
             std::cerr << "Must have atleast one neuron in each layer." << std::endl;
+            std::exit(1);
         }
         layerVector.push_back((size_t)neurons);
     }
@@ -114,12 +118,14 @@ int main(){
     std::cin >> learningRate;
     if (learningRate <= 0){
         std::cerr << "Learning rate must be positive" << std::endl;
+        std::exit(1);
     }
     std::cout << "Regularization?" << std::endl;
     double reg = 0;
     std::cin >> reg;
     if (reg <= 0){
         std::cerr << "Regularization must be positive" << std::endl;
+        std::exit(1);
     }
     std::cout << "Dropout?" << std::endl;
     double drop = 0;
@@ -133,6 +139,8 @@ int main(){
     time(&timestamp);
     std::cout << "Beginning stochastic gradient descent at " << ctime(&timestamp) << std::endl;
     srand(time(0));
+    // system("py graph.py");
+    system("powershell.exe -Command \"~\\OneDrive\\Desktop\\digitrecognizer\\venv\\Scripts\\python.exe ~\\OneDrive\\Desktop\\digitrecognizer\\graph.py\"");
     brain.sgdTrain();
     return 0;
 }

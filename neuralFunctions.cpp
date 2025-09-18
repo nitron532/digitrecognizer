@@ -4,6 +4,12 @@ double reLuPrime(double x) {
     return x > 0.0 ? 1.0 : 0.0;
 }
 
+void logger(std::string line, std::string fileName){
+    std::ofstream outfile;
+    outfile.open(fileName + ".txt", std::ios_base::app);
+    outfile << line << '\n';
+}
+
 Eigen::MatrixXd softMax(const Eigen::MatrixXd& Z) {
     Eigen::MatrixXd result(Z.rows(), Z.cols());
     for (int col = 0; col < Z.cols(); col++) {
@@ -16,6 +22,7 @@ Eigen::MatrixXd softMax(const Eigen::MatrixXd& Z) {
     }
     return result;
 }
+
 
 Network::Network(std::vector<size_t>& sizes,
                  imagesInputAndValue& trainingData,
@@ -41,6 +48,11 @@ Network::Network(std::vector<size_t>& sizes,
         weights.push_back(Eigen::MatrixXd(sizes[i+1], sizes[i]).unaryExpr([&](double){ return he(gen); }));
         biases.push_back(Eigen::VectorXd::Zero(sizes[i+1]));
     }
+}
+
+double Network::crossEntropyLoss(const Eigen::MatrixXd& softMaxActivations, const Eigen::MatrixXd& expectedOutputs){
+    Eigen::MatrixXd crossEntropyLossMatrix = (softMaxActivations.unaryExpr(&log)).cwiseProduct(expectedOutputs);
+    return ((-1.0/crossEntropyLossMatrix.cols()) * crossEntropyLossMatrix.sum());
 }
 
 void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivations,
@@ -88,9 +100,10 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
     batchActivationMatrix = softMax(batchActivationMatrix);
     allBatchActivations.push_back(batchActivationMatrix);
     return allBatchActivations;
-}
+} 
 
-void Network::testNetwork(){
+
+size_t Network::testNetwork(){
     size_t correctCount = 0;
     std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
     for(size_t i = 0; i < testingData.size(); i++){
@@ -109,7 +122,7 @@ void Network::testNetwork(){
         }
         if(maxIndexResult == maxIndexExpected){correctCount++;}
     }
-    std::cout << correctCount << " / " << testingData.size() << std::endl;
+    return correctCount;
 }
 
 void Network::sgdTrain(){
@@ -133,13 +146,13 @@ void Network::sgdTrain(){
             std::vector<Eigen::MatrixXd> zs;
             std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
             backPropagation(batchActivations, zs, oneHots, thisBatchSize);
+            logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
             j+= miniBatchSize;
         }
         time_t timestamp;
         time(&timestamp);
         std::cout << ctime(&timestamp) << ": ";
-        std::cout << "Epoch " << i << ": ";
-        testNetwork();
+        std::cout << "Epoch " << i << ": " << testNetwork() << "/ " << trainingData.size();
         std::cout << std::endl;
     }
 }
