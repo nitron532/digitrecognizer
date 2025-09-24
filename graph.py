@@ -43,7 +43,7 @@ batches = []
 def updateAxes(xdata,ydata):
     line.set_xdata(xdata)
     line.set_ydata(ydata)
-    if len(xdata) > 0: #zoom out x axis forever
+    if len(xdata) > 0:
         ax.set_xlim(0, max(xdata) + 1)  
     WINDOW = 250 #only show last WINDOW batches, maybe calculate amt of batches per epoch and set that as window?
     if len(xdata) > WINDOW:

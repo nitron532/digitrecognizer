@@ -155,7 +155,7 @@ void Network::sgdTrain(){
         time_t timestamp;
         time(&timestamp);
         std::cout << ctime(&timestamp) << ": ";
-        std::cout << "Epoch " << i << ": " << testNetwork() << "/ " << trainingData.size();
+        std::cout << "Epoch " << i << ": " << testNetwork() << "/ " << testingData.size();
         std::cout << std::endl;
     }
 }
