@@ -11,7 +11,13 @@ Highest accuracy achieved 98%
 </p>
 <p>implements Hogwild! parallel SGD (lock free parallelism), despite concurrent access of shared memory, accuracy isn't largely affected <br>
 https://papers.nips.cc/paper_files/paper/2011/file/218a0aefd1d1a4be65601cc6ddc1520e-Paper.pdf
+
+Literature has shown that Hogwild! is slower than a single threaded SGD implementation when using a large amount of threads ( > 10) <br>
+<img width="550" height="449" alt="image" src="https://github.com/user-attachments/assets/d2be6b45-5390-4f7e-a394-07059569b496" /> <br>
+image from: HogWild++: A New Mechanism for Decentralized Asynchronous Stochastic Gradient Descent by Huan Zhang et al <br>
+https://ieeexplore.ieee.org/document/7837887 <br>
 </p>
+
 
 
 
