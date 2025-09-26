@@ -16,7 +16,10 @@ Literature has shown that Hogwild! is slower than a single threaded SGD implemen
 <img width="550" height="449" alt="image" src="https://github.com/user-attachments/assets/d2be6b45-5390-4f7e-a394-07059569b496" /> <br>
 image from: HogWild++: A New Mechanism for Decentralized Asynchronous Stochastic Gradient Descent by Huan Zhang et al <br>
 https://ieeexplore.ieee.org/document/7837887 <br>
+Be aware of this limitation, due to the implementation of this network using one centralized matrix of weights (Hogwild!) rather than a decentralized, asynchronous updating of weights (Hogwild!++)<br>
+This implementation also automatically spawns an amount of threads corresponding to the amount of cores detected by std::thread::hardware_concurrency(). Consult graph for how this might effect performance on your machine.
 </p>
+
 
 
 
