@@ -7,8 +7,7 @@
 #include <random>
 #include <ctime>
 #include <fstream>
-#include <thread>
-#include <mutex>
+#include "ThreadPool.h"
 /*
 This class implements a neural network which uses mini-batch stochastic gradient descent.
 Loss - Categorical Cross Entropy
@@ -36,7 +35,7 @@ class Network{
         double learningRate = 1;
         double reg = 1; //lambda aka regularization parameter
         double dropout = 0;
-        std::mutex backpropAndLogGuard;
+        ThreadPool threadPool;
         std::vector<Eigen::MatrixXd> weights;
         std::vector<Eigen::VectorXd> biases;
         imagesInputAndValue& trainingData; //non-const since it's shuffled for SGD
@@ -77,7 +76,7 @@ class Network{
         mtx is the mutex lock used to lock backpropagation and the logging of cost values.
         Essentially, the thread works on trainingData[startIndex] to trainingData[endIndex-1].
         */
-        void threadTrain(size_t startIndex, size_t endIndex);
+        void threadTrain(size_t startIndex, size_t endIndex, size_t& taskCounter);
     public:
         Network(std::vector<size_t>& sizes, 
                 imagesInputAndValue& trainingData, 
