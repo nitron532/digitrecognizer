@@ -34,8 +34,8 @@ class Network{
         size_t epochs = 1; //how many epochs to train for
         double learningRate = 1;
         double reg = 1; //lambda aka regularization parameter
-        double dropout = 0;
-        ThreadPool threadPool;
+        double dropout = 0; //dropout rate
+        ThreadPool threadPool; //for multithreading
         std::vector<Eigen::MatrixXd> weights;
         std::vector<Eigen::VectorXd> biases;
         imagesInputAndValue& trainingData; //non-const since it's shuffled for SGD

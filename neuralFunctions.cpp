@@ -142,13 +142,11 @@ void Network::threadTrain(size_t start, size_t end, size_t& taskCounter){
         }
         std::vector<Eigen::MatrixXd> zs;
         std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs, zs);
-        //mutex back prop and logging?
-        // backpropAndLogGuard.lock();
+        
         backPropagation(batchActivations, zs, oneHots, thisBatchSize);
         if((start/miniBatchSize)%2==0){
             logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
         }
-        // backpropAndLogGuard.unlock();
         start += miniBatchSize;
     }
     taskCounter--;
