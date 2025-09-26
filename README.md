@@ -9,7 +9,10 @@ L2 Regularization <br>
 Dropout <br>
 Highest accuracy achieved 98%
 </p>
-<p>implements Hogwild! parallel SGD (lock free parallelism), despite concurrent access of shared memory, accuracy isn't largely affected</p>
+<p>implements Hogwild! parallel SGD (lock free parallelism), despite concurrent access of shared memory, accuracy isn't largely affected <br>
+https://papers.nips.cc/paper_files/paper/2011/file/218a0aefd1d1a4be65601cc6ddc1520e-Paper.pdf
+</p>
+
 
 
 
