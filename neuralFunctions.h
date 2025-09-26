@@ -7,6 +7,8 @@
 #include <random>
 #include <ctime>
 #include <fstream>
+#include <thread>
+#include <mutex>
 /*
 This class implements a neural network which uses mini-batch stochastic gradient descent.
 Loss - Categorical Cross Entropy
@@ -34,11 +36,11 @@ class Network{
         double learningRate = 1;
         double reg = 1; //lambda aka regularization parameter
         double dropout = 0;
+        std::mutex backpropAndLogGuard;
         std::vector<Eigen::MatrixXd> weights;
         std::vector<Eigen::VectorXd> biases;
         imagesInputAndValue& trainingData; //non-const since it's shuffled for SGD
         const imagesInputAndValue& testingData;
-
         /*
         feedForwardOneBatch()
         feeds forward a matrix of 784 x miniBatchSize, where each column is an image 
@@ -67,6 +69,15 @@ class Network{
         Calculates loss per backprop. Used to return value to monitoring modules.
         */
         double crossEntropyLoss(const Eigen::MatrixXd& softMaxActivations, const Eigen::MatrixXd& expectedOutputs);
+        /*
+        threadTrain()
+        Feedforward and backprop allotted amount of batches for one thread using a thread.
+        startIndex is the index corresponding to the first image in trainingData that the thread will work on.
+        endIndex is the index corresponding to the image after the last image in trainingData that the thread will work on.
+        mtx is the mutex lock used to lock backpropagation and the logging of cost values.
+        Essentially, the thread works on trainingData[startIndex] to trainingData[endIndex-1].
+        */
+        void threadTrain(size_t startIndex, size_t endIndex);
     public:
         Network(std::vector<size_t>& sizes, 
                 imagesInputAndValue& trainingData, 

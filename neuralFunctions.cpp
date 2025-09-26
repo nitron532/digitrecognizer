@@ -125,32 +125,56 @@ size_t Network::testNetwork(){
     return correctCount;
 }
 
+
+void Network::threadTrain(size_t start, size_t end){
+        while(start < end){
+        size_t endOfBatch = start + miniBatchSize;
+        if(endOfBatch >= end){
+            endOfBatch = end;
+        }
+        size_t thisBatchSize = endOfBatch - start;
+        Eigen::MatrixXd batchInputs(784, thisBatchSize);
+        Eigen::MatrixXd oneHots(10, thisBatchSize);
+        for(size_t k = start; k < endOfBatch; k++){
+            size_t batchIndex = k - start;
+            batchInputs.col(batchIndex) = trainingData[k].first;
+            oneHots.col(batchIndex) = trainingData[k].second;
+        }
+        std::vector<Eigen::MatrixXd> zs;
+        std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs, zs);
+        //mutex back prop and logging?
+        backpropAndLogGuard.lock();
+        backPropagation(batchActivations, zs, oneHots, thisBatchSize);
+        // if((start/miniBatchSize)%2==0){
+        //     logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
+        // }
+        backpropAndLogGuard.unlock();
+        start += miniBatchSize;
+    }
+}
+
 void Network::sgdTrain(){
     auto rng = std::default_random_engine {};
+    const size_t cores = std::thread::hardware_concurrency();
+    const size_t inputsPerThread = ceil(inputSize / cores);
     for(size_t i = 0; i < epochs; i++){
         std::shuffle(trainingData.begin(),trainingData.end(), rng);
-        size_t j = 0;
-        while(j < inputSize){
-            size_t end = j + miniBatchSize;
-            if(end >= inputSize){
-                end = inputSize;
+        // size_t j = 0;
+        std::vector<std::thread> workerThreads;
+        size_t beginIndex = 0;
+        size_t endIndex = inputsPerThread;
+        for(size_t i = 0; i < cores; i++){
+            workerThreads.emplace_back(&Network::threadTrain, this, beginIndex, endIndex);
+            beginIndex = endIndex;
+            endIndex += inputsPerThread;
+            if(endIndex > inputSize){
+                endIndex = inputSize;
             }
-            size_t thisBatchSize = end-j;
-            Eigen::MatrixXd batchInputs(784, thisBatchSize);
-            Eigen::MatrixXd oneHots(10,thisBatchSize);
-            for(size_t k = j; k < end; k++){
-                size_t batchIndex = k - j;
-                batchInputs.col(batchIndex) = trainingData[k].first;
-                oneHots.col(batchIndex) = trainingData[k].second;
+        }
+        for(auto& t : workerThreads){
+            if (t.joinable()){
+                t.join();
             }
-            std::vector<Eigen::MatrixXd> zs;
-            std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
-            backPropagation(batchActivations, zs, oneHots, thisBatchSize);
-            //log every other loss as to not overload graph
-            if((j/miniBatchSize)%2==0){
-                logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
-            }
-            j+= miniBatchSize;
         }
         time_t timestamp;
         time(&timestamp);
@@ -160,6 +184,28 @@ void Network::sgdTrain(){
     }
 }
 
+        // while(j < inputSize){
+        //     size_t end = j + miniBatchSize;
+        //     if(end >= inputSize){
+        //         end = inputSize;
+        //     }
+        //     size_t thisBatchSize = end-j;
+        //     Eigen::MatrixXd batchInputs(784, thisBatchSize);
+        //     Eigen::MatrixXd oneHots(10,thisBatchSize);
+        //     for(size_t k = j; k < end; k++){
+        //         size_t batchIndex = k - j;
+        //         batchInputs.col(batchIndex) = trainingData[k].first;
+        //         oneHots.col(batchIndex) = trainingData[k].second;
+        //     }
+        //     std::vector<Eigen::MatrixXd> zs;
+        //     std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs,zs);
+        //     backPropagation(batchActivations, zs, oneHots, thisBatchSize);
+        //     //log every other loss as to not overload graph
+        //     if((j/miniBatchSize)%2==0){
+        //         logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
+        //     }
+        //     j+= miniBatchSize;
+        // }
 
 
 
