@@ -1,4 +1,4 @@
-<h1>MNIST Handwritten Digit Neural Network </h1> 
+<h1>Multithreaded MNIST Handwritten Digit Neural Network </h1> 
 <h2>Implemented using C++, Eigen library for linear algebra, some extra utilities for loading images</h2>
 <h2> Loss function visualizer using NumPy and Matplotlib </h2>
 <p>
@@ -9,6 +9,7 @@ L2 Regularization <br>
 Dropout <br>
 Highest accuracy achieved 98%
 </p>
+<p>implements Hogwild! parallel SGD (lock free parallelism), despite concurrent access of shared memory, accuracy isn't largely affected</p>
 
 
 
