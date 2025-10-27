@@ -20,6 +20,8 @@ Be aware of this limitation, due to the implementation of this network using one
 This implementation also automatically spawns an amount of threads corresponding to the amount of cores detected by std::thread::hardware_concurrency(). Consult graph for how this might effect performance on your machine.
 </p>
 
+<h3>looking into using elemental for parallel matrix operations so there's no bottleneck at weight and bias updating</h3>
+
 
 
 
