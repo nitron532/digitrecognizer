@@ -9,7 +9,20 @@ L2 Regularization <br>
 Dropout <br>
 Highest accuracy achieved 98%
 </p>
-<p>implements Hogwild! parallel SGD (lock free parallelism), despite concurrent access of shared memory, accuracy isn't largely affected</p>
+<p>implements Hogwild! parallel SGD (lock free parallelism) <br>
+
+<li>
+  looking into elemental for parallel matrix mult
+</li>
+<li>
+  delete irrelelvant loss values from loss plot to speed up updating
+</li>
+
+
+
+
+
+
 
 
 
