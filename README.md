@@ -9,14 +9,14 @@ L2 Regularization <br>
 Dropout <br>
 Highest accuracy achieved 98%
 </p>
-<p>implements Hogwild! parallel SGD (lock free parallelism) <br>
+<p>implements Hogwild! parallel SGD (lock free parallelism) <br> 
+  Disabled OpenMP multithreading for matrix ops (overhead for smaller / medium size matrix operations > speedup)
+</p>
 
-<li>
-  looking into elemental for parallel matrix mult
-</li>
 <li>
   delete irrelelvant loss values from loss plot to speed up updating
 </li>
+
 
 
 
