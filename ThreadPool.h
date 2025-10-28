@@ -13,7 +13,6 @@ class ThreadPool{
         std::mutex queueMutex;
         std::condition_variable cV;
         
-
     public:
         ThreadPool();
         ~ThreadPool();

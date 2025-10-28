@@ -1,14 +1,15 @@
 #include "neuralFunctions.h"
+#include <omp.h>
 
 double reLuPrime(double x) {
     return x > 0.0 ? 1.0 : 0.0;
 }
 
-void logger(std::string line, std::string fileName){
-    std::ofstream outfile;
-    outfile.open(fileName + ".txt", std::ios_base::app);
-    outfile << line << '\n';
-}
+// void logger(std::string line, std::string fileName){
+//     std::ofstream outfile;
+//     outfile.open(fileName + ".txt", std::ios_base::app);
+//     outfile << line << '\n';
+// }
 
 Eigen::MatrixXd softMax(const Eigen::MatrixXd& Z) {
     Eigen::MatrixXd result(Z.rows(), Z.cols());
@@ -32,12 +33,11 @@ Network::Network(std::vector<size_t>& sizes,
                  double drop,
                  const imagesInputAndValue& testingData) : 
                  testingData(testingData), 
-                 trainingData(trainingData){
+                 trainingData(trainingData),inputSize(trainingData.size()), testSize(testingData.size()){
 
     std::random_device rd;
     std::mt19937 gen(rd());
     numLayers = sizes.size();
-    inputSize = trainingData.size();
     miniBatchSize = mBS;
     epochs = e;
     learningRate = lR;
@@ -86,12 +86,12 @@ std::vector<Eigen::MatrixXd> Network::feedForwardOneBatch(const Eigen::MatrixXd&
         zs.push_back(batchActivationMatrix);
         batchActivationMatrix = batchActivationMatrix.array().max(0); //reLu
         //dropout
-        Eigen::MatrixXd mask = Eigen::MatrixXd::Zero(batchActivationMatrix.rows(),batchActivationMatrix.cols());
-        for(size_t r = 0; r < mask.rows(); r++){
-            for (size_t c = 0; c < mask.cols(); c++){
-                mask(r,c) = (((double)rand())/ RAND_MAX) > dropout ? 1.0 / (1.0-dropout) : 0.0;
-            }
-        }
+        // Eigen::MatrixXd mask = Eigen::MatrixXd::Zero(batchActivationMatrix.rows(),batchActivationMatrix.cols());
+        // for(size_t r = 0; r < mask.rows(); r++){
+        //     for (size_t c = 0; c < mask.cols(); c++){
+        //         mask(r,c) = (((double)rand())/ RAND_MAX) > dropout ? 1.0 / (1.0-dropout) : 0.0;
+        //     }
+        // }
         allBatchActivations.push_back(batchActivationMatrix);
     }
     //softmax last matrix of activations (representing last layer of activations across all images in batch)
@@ -126,8 +126,8 @@ size_t Network::testNetwork(){
 }
 
 
-void Network::threadTrain(size_t start, size_t end, size_t& taskCounter){
-        while(start < end){
+void Network::threadTrain(size_t start, size_t end, std::atomic<size_t>& taskCounter){
+    while(start < end){
         size_t endOfBatch = start + miniBatchSize;
         if(endOfBatch >= end){
             endOfBatch = end;
@@ -142,42 +142,117 @@ void Network::threadTrain(size_t start, size_t end, size_t& taskCounter){
         }
         std::vector<Eigen::MatrixXd> zs;
         std::vector<Eigen::MatrixXd> batchActivations = feedForwardOneBatch(batchInputs, zs);
+        /*
+        with mutex, weight and bias updates are applied for a wall-clock previous batch, meaning by the time the last patch gets
+        processed, its updates are irrelevant because the first few threads have already moved on
         
+        without mutex, sudden updates can make the loss explode when network was designed with deterministic weight/bias state in mind
+
+        maybe could process miniBatchSize in parallel, accumulate gradients in parallel, backprop singlethreaded?
+
+        logging commented out for optimization
+        */
+        // backPropLock.lock();
         backPropagation(batchActivations, zs, oneHots, thisBatchSize);
-        if((start/miniBatchSize)%2==0){
-            logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
-        }
+        // backPropLock.unlock();
+        // if((start/miniBatchSize)%2==0){
+        //     logger(std::to_string(crossEntropyLoss(batchActivations[numLayers-1], oneHots)), "cost");
+        // }
         start += miniBatchSize;
     }
-    taskCounter--;
+    taskCounter.fetch_add(1, std::memory_order_release);
 }
 
+size_t Network::threadTest(size_t start, size_t end, std::atomic<size_t>& taskCounter){
+    size_t correct = 0;
+    std::vector<std::pair<Eigen::MatrixXd, Eigen::VectorXd>> results;
+    size_t resultIndex = 0;
+    while(start < end){
+        std::vector<Eigen::MatrixXd> zTest;
+        results.push_back({feedForwardOneBatch(testingData[start].first,zTest).back(), testingData[start].second});
+        int maxIndexResult = 0;
+        int maxIndexExpected = 0;
+        //argmax?
+        for (size_t j = 1; j < results[resultIndex].first.rows(); j++){
+            if (results[resultIndex].first(j,0) > results[resultIndex].first(maxIndexResult,0)){
+                maxIndexResult = j;
+            }
+            if(results[resultIndex].second(j) > results[resultIndex].second(maxIndexExpected)){
+                maxIndexExpected = j;
+            }
+        }
+        if(maxIndexResult == maxIndexExpected){correct++;}
+        start++;
+        resultIndex++;
+    }
+    return correct;
+}
+
+
 void Network::sgdTrain(){
+    omp_set_num_threads(1); //disable openmp parallel matrix ops (for now)
     auto rng = std::default_random_engine {};
     size_t cores = std::thread::hardware_concurrency();
-    const size_t inputsPerThread = ceil(inputSize / cores);
+    // size_t cores = 6;
+    size_t inputsPerThreadTrain = static_cast<size_t>(ceil(static_cast<double>(inputSize) / cores));
+    std::mutex ensureSequential;
+    std::condition_variable cv;
     for(size_t i = 0; i < epochs; i++){
-        size_t taskCounter = cores;
+
+        std::atomic<size_t> trainCounter = 0;
+        std::atomic<size_t> testCounter = 0;
+
         std::shuffle(trainingData.begin(),trainingData.end(), rng);
         size_t beginIndex = 0;
-        size_t endIndex = inputsPerThread;
-        for(size_t i = 0; i < cores; i++){
-            threadPool.enqueueTask([this, beginIndex, endIndex, &taskCounter]() mutable {
-                this->threadTrain(beginIndex, endIndex, taskCounter);
+        size_t endIndex = inputsPerThreadTrain;
+        for(size_t j = 0; j < cores; j++){
+            threadPool.enqueueTask([this, beginIndex, endIndex, &trainCounter,&ensureSequential, &cv, cores]() mutable {
+                this->threadTrain(beginIndex, endIndex, trainCounter);
+                if (trainCounter.fetch_add(1, std::memory_order_release) + 1 == cores) {
+                    std::lock_guard<std::mutex> lk(ensureSequential);
+                    cv.notify_one();
+                }
             });
             beginIndex = endIndex;
-            endIndex += inputsPerThread;
+            endIndex += inputsPerThreadTrain;
             if(endIndex > inputSize){
                 endIndex = inputSize;
             }
         }
-        while(taskCounter != 0){
-            //wait for threads to finish
+        {
+            std::unique_lock<std::mutex> lk(ensureSequential);
+            cv.wait(lk, [&] { return trainCounter.load() == cores; });
+        }
+        // taskCounter.store(0,std::memory_order_relaxed);
+
+        beginIndex = 0;
+        size_t inputsPerThreadTest = static_cast<size_t>(ceil(static_cast<double>(testSize) / cores));
+        endIndex = inputsPerThreadTest;
+
+        std::atomic<size_t> overallCorrect = 0;
+        for(size_t j = 0; j < cores; j++){
+            threadPool.enqueueTask([this, beginIndex, endIndex, &testCounter,&overallCorrect, &cv, &ensureSequential, cores]() mutable{
+                size_t correct = this->threadTest(beginIndex,endIndex, testCounter);
+                overallCorrect.fetch_add(correct, std::memory_order_relaxed);
+                if (testCounter.fetch_add(1, std::memory_order_release) + 1 == cores) {
+                    std::lock_guard<std::mutex> lk(ensureSequential);
+                    cv.notify_one();
+                }
+            });
+            beginIndex = endIndex;
+            endIndex+= inputsPerThreadTest;
+            if(endIndex > testSize){
+                endIndex = testSize;
+            }
+        }
+        {
+            std::unique_lock<std::mutex> lk(ensureSequential);
+            cv.wait(lk, [&] { return testCounter.load() == cores; });
         }
         time_t timestamp;
         time(&timestamp);
         std::cout << ctime(&timestamp) << ": ";
-        std::cout << "Epoch " << i << ": " << testNetwork() << "/ " << testingData.size();
+        std::cout << "Epoch " << i << ": " << overallCorrect << "/ " << testSize;
         std::cout << std::endl;
     }
 }

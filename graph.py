@@ -78,4 +78,5 @@ for rawLine in loglines:
     batches.append(batchCounter)
     losses.append(lossValue)
     updateAxes(batches,losses)
+    losses[-200:]
     plt.pause(0.001)

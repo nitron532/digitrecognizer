@@ -80,7 +80,7 @@ int main(){
         }
     }
     //graph.py matplotlib dependency only works through powershell right now so i have to call it through there
-    system("powershell.exe -Command \"Start-Process ~\\OneDrive\\Desktop\\digitrecognizer\\venv\\Scripts\\python.exe graph.py\"");
+    // system("powershell.exe -Command \"Start-Process ~\\OneDrive\\Desktop\\digitrecognizer\\venv\\Scripts\\python.exe graph.py\"");
     std::cout << "miniBatchSize?" << std::endl; 
     int miniBatchSize = 0;
     std::cin >> miniBatchSize;

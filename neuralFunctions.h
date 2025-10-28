@@ -7,7 +7,9 @@
 #include <random>
 #include <ctime>
 #include <fstream>
+#include <atomic>
 #include "ThreadPool.h"
+
 /*
 This class implements a neural network which uses mini-batch stochastic gradient descent.
 Loss - Categorical Cross Entropy
@@ -28,7 +30,8 @@ typedef std::vector<std::pair<Eigen::VectorXd, Eigen::VectorXd>> imagesInputAndV
 
 class Network{
     private:
-        size_t inputSize = 1; //how many images to train with
+        const size_t inputSize; //how many images to train with
+        const size_t testSize; //how many images to test with
         size_t numLayers = 2; //total amount of layers
         size_t miniBatchSize = 1; //chosen mini-batch size
         size_t epochs = 1; //how many epochs to train for
@@ -40,6 +43,7 @@ class Network{
         std::vector<Eigen::VectorXd> biases;
         imagesInputAndValue& trainingData; //non-const since it's shuffled for SGD
         const imagesInputAndValue& testingData;
+        std::mutex backPropLock;
         /*
         feedForwardOneBatch()
         feeds forward a matrix of 784 x miniBatchSize, where each column is an image 
@@ -76,7 +80,7 @@ class Network{
         mtx is the mutex lock used to lock backpropagation and the logging of cost values.
         Essentially, the thread works on trainingData[startIndex] to trainingData[endIndex-1].
         */
-        void threadTrain(size_t startIndex, size_t endIndex, size_t& taskCounter);
+        void threadTrain(size_t startIndex, size_t endIndex, std::atomic<size_t>& taskCounter);
     public:
         Network(std::vector<size_t>& sizes, 
                 imagesInputAndValue& trainingData, 
@@ -89,7 +93,7 @@ class Network{
         /*
         sgdTrain()
         runs feed forwarding then backpropagation functions for each minibatch created, epochs amount of times
-        runs testNetwork at the end of each epoch to evaluate accuracy
+        runs threadTest at the end of each epoch to evaluate accuracy
         */
         void sgdTrain();
         /*
@@ -98,4 +102,11 @@ class Network{
         returns amount of correctly identified images
         */
         size_t testNetwork();
+
+        /*
+        threadTrain()
+        testing on a portion of the training data by one thread of many.
+        returns the amount correct out of the portion of training data.
+        */
+        size_t threadTest(size_t beginIndex, size_t endIndex, std::atomic<size_t>& taskCount);
 };
