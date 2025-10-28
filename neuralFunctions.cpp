@@ -193,7 +193,6 @@ void Network::sgdTrain(){
     omp_set_num_threads(1); //disable openmp parallel matrix ops (for now)
     auto rng = std::default_random_engine {};
     size_t cores = std::thread::hardware_concurrency();
-    // size_t cores = 6;
     size_t inputsPerThreadTrain = static_cast<size_t>(ceil(static_cast<double>(inputSize) / cores));
     std::mutex ensureSequential;
     std::condition_variable cv;
@@ -223,36 +222,36 @@ void Network::sgdTrain(){
             std::unique_lock<std::mutex> lk(ensureSequential);
             cv.wait(lk, [&] { return trainCounter.load() == cores; });
         }
-        // taskCounter.store(0,std::memory_order_relaxed);
 
-        beginIndex = 0;
-        size_t inputsPerThreadTest = static_cast<size_t>(ceil(static_cast<double>(testSize) / cores));
-        endIndex = inputsPerThreadTest;
+        // beginIndex = 0;
+        // size_t inputsPerThreadTest = static_cast<size_t>(ceil(static_cast<double>(testSize) / cores));
+        // endIndex = inputsPerThreadTest;
 
-        std::atomic<size_t> overallCorrect = 0;
-        for(size_t j = 0; j < cores; j++){
-            threadPool.enqueueTask([this, beginIndex, endIndex, &testCounter,&overallCorrect, &cv, &ensureSequential, cores]() mutable{
-                size_t correct = this->threadTest(beginIndex,endIndex, testCounter);
-                overallCorrect.fetch_add(correct, std::memory_order_relaxed);
-                if (testCounter.fetch_add(1, std::memory_order_release) + 1 == cores) {
-                    std::lock_guard<std::mutex> lk(ensureSequential);
-                    cv.notify_one();
-                }
-            });
-            beginIndex = endIndex;
-            endIndex+= inputsPerThreadTest;
-            if(endIndex > testSize){
-                endIndex = testSize;
-            }
-        }
-        {
-            std::unique_lock<std::mutex> lk(ensureSequential);
-            cv.wait(lk, [&] { return testCounter.load() == cores; });
-        }
-        time_t timestamp;
-        time(&timestamp);
-        std::cout << ctime(&timestamp) << ": ";
-        std::cout << "Epoch " << i << ": " << overallCorrect << "/ " << testSize;
+        // std::atomic<size_t> overallCorrect = 0;
+        // for(size_t j = 0; j < cores; j++){
+        //     threadPool.enqueueTask([this, beginIndex, endIndex, &testCounter,&overallCorrect, &cv, &ensureSequential, cores]() mutable{
+        //         size_t correct = this->threadTest(beginIndex,endIndex, testCounter);
+        //         overallCorrect.fetch_add(correct, std::memory_order_relaxed);
+        //         if (testCounter.fetch_add(1, std::memory_order_release) + 1 == cores) {
+        //             std::lock_guard<std::mutex> lk(ensureSequential);
+        //             cv.notify_one();
+        //         }
+        //     });
+        //     beginIndex = endIndex;
+        //     endIndex+= inputsPerThreadTest;
+        //     if(endIndex > testSize){
+        //         endIndex = testSize;
+        //     }
+        // }
+        // {
+        //     std::unique_lock<std::mutex> lk(ensureSequential);
+        //     cv.wait(lk, [&] { return testCounter.load() == cores; });
+        // }
+        // time_t timestamp;
+        // time(&timestamp);
+        // std::cout << ctime(&timestamp) << ": ";
+        // std::cout << "Epoch " << i << ": " << overallCorrect << "/ " << testSize;
+        std::cout << "Epoch "<< i << ": "<< testNetwork() << " / " << testSize;
         std::cout << std::endl;
     }
 }
