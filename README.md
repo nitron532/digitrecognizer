@@ -1,21 +1,16 @@
-<h1>Multithreaded MNIST Handwritten Digit Neural Network </h1> 
-<h2>Implemented using C++, Eigen library for linear algebra, some extra utilities for loading images</h2>
-<h2> Loss function visualizer using NumPy and Matplotlib </h2>
-<p>
-Loss: Categorical Cross Entropy <br>
-Activations: ReLu (hidden layers), Softmax (output layer) <br>
-Initialization: He <br>
-L2 Regularization <br>
-Dropout <br>
-Highest accuracy achieved 98%
-</p>
-<p>implements Hogwild! parallel SGD (lock free parallelism) <br> 
-  Disabled OpenMP multithreading for matrix ops (overhead for smaller / medium size matrix operations > speedup)
-</p>
+<h2>Multithreaded MNIST Handwritten Digit Neural Network </h1> 
+<h3>Implemented using C++, Eigen library for linear algebra, some extra utilities for loading images</h2>
+<h3> Loss function visualizer using NumPy and Matplotlib </h2>
+
+<h2>Want to rewrite with openmp (have to consider eigen's implict use of openmp though)</h2>
 
 <li>
   delete irrelelvant loss values from loss plot to speed up updating
 </li>
+
+
+
+
 
 
 
