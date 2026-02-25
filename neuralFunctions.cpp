@@ -60,7 +60,6 @@ void Network::backPropagation(const std::vector<Eigen::MatrixXd>& batchActivatio
                               const Eigen::MatrixXd& oneHots, 
                               size_t thisBatchSize){
 
-    std::vector<std::pair<Eigen::MatrixXd,Eigen::MatrixXd>> gradients;
     Eigen::MatrixXd delta = batchActivations.back() - oneHots;
     Eigen::MatrixXd weightDeriv = (delta * batchActivations[batchActivations.size()-2].transpose()) / thisBatchSize;
     Eigen::MatrixXd biasDeriv = delta.rowwise().mean();
@@ -247,9 +246,9 @@ void Network::sgdTrain(){
         //     std::unique_lock<std::mutex> lk(ensureSequential);
         //     cv.wait(lk, [&] { return testCounter.load() == cores; });
         // }
-        // time_t timestamp;
-        // time(&timestamp);
-        // std::cout << ctime(&timestamp) << ": ";
+        time_t timestamp;
+        time(&timestamp);
+        std::cout << ctime(&timestamp) << ": ";
         // std::cout << "Epoch " << i << ": " << overallCorrect << "/ " << testSize;
         std::cout << "Epoch "<< i << ": "<< testNetwork() << " / " << testSize;
         std::cout << std::endl;
